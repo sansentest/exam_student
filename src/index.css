@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  font-family: 'Inter', 'Noto Sans Khmer', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+  background-color: #f8fafc;
+  overflow-x: hidden;
+}
+
+/* Aurora Premium Background */
+.aurora-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: #f8fafc;
+  overflow: hidden;
+}
+
+.aurora-glow {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  filter: blur(120px);
+  opacity: 0.15;
+  border-radius: 50%;
+  animation: drift 20s infinite alternate ease-in-out;
+}
+
+.aurora-glow:nth-child(1) {
+  top: -10%;
+  left: -10%;
+  background: #3b82f6; /* Blue */
+}
+
+.aurora-glow:nth-child(2) {
+  top: 40%;
+  right: -10%;
+  background: #0ea5e9; /* Sky */
+  animation-delay: -5s;
+}
+
+.aurora-glow:nth-child(3) {
+  bottom: -20%;
+  left: 20%;
+  background: #8b5cf6; /* Purple */
+  animation-delay: -10s;
+}
+
+@keyframes drift {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(60px, -60px) scale(1.1); }
+}
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
