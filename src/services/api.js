@@ -1,5 +1,5 @@
 // Replace this with your actual Google Apps Script Web App URL
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwkhEvVTJmanxELyS27nvr_n7SNWFuhwFOuY-grrRgz9Q4i-AeBI8bmIvpd5V4e3ptu-A/exec';
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby1s5rqKwgHlsGv2EUED34V4BG8SUsK7GP7GxepFQ5q25ANx44YKEgCxqw_11Kbhn_o0w/exec';
 
 import { questions } from '../data/questions';
 
@@ -43,8 +43,7 @@ export const submitToGoogleSheets = async (data) => {
   };
 
   let attempt = 0;
-  const maxRetries = 3;
-  const retryDelayMs = 15000; // 15 seconds
+  const maxRetries = 5; // Increased to 5 retries for larger classes
 
   while (attempt < maxRetries) {
     try {
@@ -62,8 +61,8 @@ export const submitToGoogleSheets = async (data) => {
 
       const resultData = await response.json();
       if (resultData.result !== 'success') {
-        const errorMsg = typeof resultData.error === 'object' 
-          ? JSON.stringify(resultData.error) 
+        const errorMsg = typeof resultData.error === 'object'
+          ? JSON.stringify(resultData.error)
           : (resultData.error || 'Unknown error from script');
         throw new Error(errorMsg);
       }
@@ -72,14 +71,29 @@ export const submitToGoogleSheets = async (data) => {
     } catch (error) {
       attempt++;
       console.error(`[Auto Retry] Submission attempt ${attempt} failed:`, error);
-      
+
       if (attempt >= maxRetries) {
         console.error('Max retries reached. Giving up.');
         throw error;
       }
-      
-      console.log(`Waiting 15 seconds before retrying...`);
-      await new Promise(resolve => setTimeout(resolve, retryDelayMs));
+
+      // Determine how long to wait
+      let delayMs = 15000; // Default 15 seconds
+
+      // Check if error message explicitly tells us how long to wait (e.g. "retry in 18.01s")
+      const errorStr = error.message || String(error);
+      const match = errorStr.match(/retryDelay["\s:]+([\d\.]+)/i) || errorStr.match(/retry in ([\d\.]+)s/i);
+      if (match && match[1]) {
+        delayMs = parseFloat(match[1]) * 1000 + 2000; // Add 2 seconds buffer
+      }
+
+      // Add "Jitter" (Randomize the wait time by adding 1 to 10 seconds)
+      // This prevents all 10 students from retrying at the EXACT same millisecond.
+      const jitter = Math.random() * 10000;
+      const totalWaitTime = delayMs + jitter;
+
+      console.log(`Waiting ${(totalWaitTime / 1000).toFixed(1)} seconds before retrying...`);
+      await new Promise(resolve => setTimeout(resolve, totalWaitTime));
     }
   }
 };

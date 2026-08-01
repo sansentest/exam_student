@@ -9,8 +9,53 @@ import ProgressBar from '../components/ProgressBar';
 import AntiCheatOverlay from '../components/AntiCheatOverlay';
 import {
   ChevronLeft, ChevronRight, Send, User,
-  AlertTriangle, X, FileText, CheckCircle2, AlertCircle
+  AlertTriangle, X, FileText, CheckCircle2, AlertCircle, Copy, RefreshCw
 } from 'lucide-react';
+
+/* ── Submit Error & Backup Copy Modal ── */
+function ErrorSubmitModal({ onRetry, onClose, studentInfo, answers, textAnswers, questions3 }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyBackup = () => {
+    const backupText = `[BACKUP EXAM DATA]
+ឈ្មោះ: ${studentInfo?.name || ''} (${studentInfo?.studentCode || ''}) - ថ្នាក់: ${studentInfo?.className || ''}
+ពិន្ទុ QCM: ${Object.keys(answers).filter(k => k !== 'section3').length} សំណួរបានឆ្លើយ
+ចម្លើយសរសេរ:
+${questions3.map((q, idx) => `សំណួរទី ${idx + 1}: ${textAnswers[q.id] || '(មិនបានឆ្លើយ)'}`).join('\n\n')}
+`;
+    navigator.clipboard.writeText(backupText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-[2rem] shadow-2xl max-w-sm w-full p-7 border border-red-100 text-center">
+        <div className="flex justify-center mb-4">
+          <div className="w-16 h-16 rounded-full bg-red-50 border-2 border-red-200 flex items-center justify-center shadow-lg shadow-red-500/20">
+            <AlertCircle className="w-8 h-8 text-red-500" />
+          </div>
+        </div>
+        <h2 className="text-lg font-extrabold text-slate-800 mb-2">បរាជ័យក្នុងការបញ្ជូន!</h2>
+        <p className="text-slate-500 text-xs md:text-sm leading-relaxed mb-6">
+          ប្រព័ន្ធអ៊ីនធឺណិត ឬ Server រអាក់រអួល។ សូមចុចប៊ូតុង <b>&quot;ព្យាយាមបញ្ជូនម្តងទៀត&quot;</b> ឬ <b>&quot;ចម្លងចម្លើយ&quot;</b> ផ្ញើឱ្យគ្រូផ្ទាល់តាម Telegram ដើម្បីកុំឱ្យបាត់ពិន្ទុ!
+        </p>
+        <div className="flex flex-col gap-2.5">
+          <button onClick={onRetry} className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all">
+            <RefreshCw size={16} /> ព្យាយាមបញ្ជូនម្តងទៀត
+          </button>
+          <button onClick={handleCopyBackup} className={`w-full py-3 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+            copied ? 'bg-emerald-50 border-emerald-300 text-emerald-600' : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+          }`}>
+            {copied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
+            {copied ? 'បានចម្លងរួចរាល់!' : 'ចម្លងចម្លើយទុក (Backup)'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /* ── Final Submit Confirm Modal ── */
 function SubmitModal({ onConfirm, onCancel, answeredCount, totalCount }) {
@@ -100,15 +145,31 @@ export default function ExamSection3() {
   const { studentInfo, examStarted, answers, tabSwitches, submitExam } = useExamStore();
   const { isPenalized } = useAntiCheat();
 
-  const [textAnswers, setTextAnswers] = useState({});
+  const [textAnswers, setTextAnswers] = useState(() => {
+    try {
+      const saved = localStorage.getItem('exam-section3-draft');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (!examStarted) navigate('/');
   }, [examStarted, navigate]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('exam-section3-draft', JSON.stringify(textAnswers));
+    } catch {
+      // ignore
+    }
+  }, [textAnswers]);
 
   const currentQuestion = questions3[currentIdx];
   const isLast = currentIdx === questions3.length - 1;
@@ -160,11 +221,14 @@ export default function ExamSection3() {
         tabSwitches,
         remainingTime: 'Final Submit',
       });
+      try {
+        localStorage.removeItem('exam-section3-draft');
+      } catch {}
       submitExam();          // sets submitted: true → stops timer
       navigate('/success');
     } catch {
       setIsSubmitting(false);
-      alert('មានបញ្ហាក្នុងការបញ្ជូន។ សូមទាក់ទងគ្រូ!');
+      setShowErrorModal(true);
     }
   };
 
@@ -183,11 +247,24 @@ export default function ExamSection3() {
           onCancel={() => setShowSubmitModal(false)}
         />
       )}
+      {showErrorModal && (
+        <ErrorSubmitModal
+          studentInfo={studentInfo}
+          answers={answers}
+          textAnswers={textAnswers}
+          questions3={questions3}
+          onRetry={() => {
+            setShowErrorModal(false);
+            doSubmit();
+          }}
+          onClose={() => setShowErrorModal(false)}
+        />
+      )}
 
       <div className={`min-h-screen bg-transparent flex flex-col items-center pt-3 px-3 pb-6 md:pt-5 md:px-5 ${isPenalized ? 'pointer-events-none blur-sm' : ''}`}>
 
         {/* Header */}
-        <div className="w-full max-w-3xl flex items-center gap-3 mb-3 bg-white/90 backdrop-blur-2xl px-4 py-2.5 rounded-2xl shadow-md border border-white/80 flex-shrink-0">
+        <div className="w-full max-w-3xl flex items-center gap-3 mb-3 bg-white px-4 py-2.5 rounded-2xl shadow-sm border border-slate-200 flex-shrink-0">
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-xl text-white shadow-md shadow-blue-500/20 flex-shrink-0">
               <User className="w-4 h-4" />
@@ -214,24 +291,19 @@ export default function ExamSection3() {
 
           <div className="mt-3">
             <div className="relative w-full">
-              {/* Glow when answered */}
-              {isAnswered && (
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-400/15 via-indigo-400/15 to-purple-400/15 rounded-[2rem] blur-xl pointer-events-none" />
-              )}
-
-              <div className={`relative bg-white/95 backdrop-blur-2xl rounded-2xl border transition-all duration-500 overflow-hidden shadow-lg ${
-                isAnswered ? 'border-blue-200/70 shadow-blue-100' : 'border-slate-200/80 shadow-slate-100'
+              <div className={`relative bg-white rounded-2xl border transition-colors duration-150 overflow-hidden shadow-sm ${
+                isAnswered ? 'border-blue-400 shadow-blue-50' : 'border-slate-200 shadow-slate-100'
               }`}>
                 {/* Accent bar */}
-                <div className={`h-1 w-full transition-all duration-700 ${
-                  isAnswered ? 'bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500' : 'bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200'
+                <div className={`h-1 w-full transition-colors duration-150 ${
+                  isAnswered ? 'bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500' : 'bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200'
                 }`} />
 
                 {/* Card Header */}
                 <div className="px-4 pt-4 pb-3 md:px-6 md:pt-5">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center font-extrabold text-xs transition-all duration-500 ${
-                      isAnswered ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/30' : 'bg-slate-100 text-slate-500'
+                    <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center font-extrabold text-xs transition-colors duration-150 ${
+                      isAnswered ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-500'
                     }`}>
                       {currentIdx + 1}
                     </div>
@@ -262,8 +334,12 @@ export default function ExamSection3() {
                           : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 focus:border-blue-400 focus:bg-white'
                       }`}
                     />
-                    <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-md border border-slate-100 shadow-sm">
-                      {isAnswered && <CheckCircle2 size={12} className="text-blue-500" />}
+                    <div className="absolute bottom-3 right-3 flex items-center gap-2 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md border border-slate-100 shadow-sm">
+                      {isAnswered && (
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600">
+                          <CheckCircle2 size={12} /> បានរក្សាទុក
+                        </span>
+                      )}
                       <span className="text-[10px] font-bold text-slate-400">{currentAnswer.length} អក្សរ</span>
                     </div>
                   </div>

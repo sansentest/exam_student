@@ -4,7 +4,7 @@ import { Clock } from 'lucide-react';
 import { submitToGoogleSheets } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
-const EXAM_DURATION_MS = 60 * 60 * 1000; // 60 minutes
+const EXAM_DURATION_MS = 60 * 60 * 1000; // 60 minutes (1 hour)
 
 export default function Timer() {
   const { examStarted, startTime, submitted, submitExam, studentInfo, answers, tabSwitches } = useExamStore();

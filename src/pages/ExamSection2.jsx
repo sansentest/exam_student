@@ -18,8 +18,8 @@ import {
 function SectionTransition() {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 via-blue-900/80 to-slate-900/80 backdrop-blur-xl" />
-      <div className="relative flex flex-col items-center gap-5 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[2.5rem] px-12 py-10 shadow-2xl text-center">
+      <div className="absolute inset-0 bg-slate-900/90" />
+      <div className="relative flex flex-col items-center gap-5 bg-slate-800 border border-slate-700 rounded-[2.5rem] px-12 py-10 shadow-2xl text-center">
         <div className="w-16 h-16 rounded-2xl bg-white/15 border border-white/30 flex items-center justify-center mb-2">
           <ClipboardList className="w-8 h-8 text-white" />
         </div>
@@ -132,7 +132,7 @@ export default function ExamSection2() {
       <div className={`min-h-screen bg-transparent flex flex-col items-center pt-3 px-3 pb-6 md:pt-5 md:px-5 ${isPenalized ? 'pointer-events-none blur-sm' : ''}`}>
 
         {/* Compact Single-Row Header */}
-        <div className="w-full max-w-3xl flex items-center gap-3 mb-3 bg-white/90 backdrop-blur-2xl px-4 py-2.5 rounded-2xl shadow-md border border-white/80 flex-shrink-0">
+        <div className="w-full max-w-3xl flex items-center gap-3 mb-3 bg-white px-4 py-2.5 rounded-2xl shadow-sm border border-slate-200 flex-shrink-0">
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-xl text-white shadow-md shadow-blue-500/20 flex-shrink-0">
               <User className="w-4 h-4" />

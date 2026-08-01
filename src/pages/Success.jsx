@@ -2,10 +2,10 @@ import useExamStore from '../store/useExamStore';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Confetti from 'react-confetti';
-import { CheckCircle2, Home, BookOpen, Clock, Shield } from 'lucide-react';
+import { CheckCircle2, Home, BookOpen, Clock, Shield, Award, Printer, X } from 'lucide-react';
 
 export default function Success() {
-  const { submitted, resetExam } = useExamStore();
+  const { studentInfo, submitted, resetExam } = useExamStore();
   const navigate = useNavigate();
   const [windowDimensions, setWindowDimensions] = useState({
     width: window.innerWidth,
@@ -13,6 +13,7 @@ export default function Success() {
   });
   const [showConfetti, setShowConfetti] = useState(true);
   const [visible, setVisible] = useState(false);
+  const [showCertificate, setShowCertificate] = useState(false);
 
   useEffect(() => {
     if (!submitted) { navigate('/'); return; }
@@ -54,6 +55,55 @@ export default function Success() {
         />
       </div>
 
+      {/* ── Certificate Modal ── */}
+      {showCertificate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-8 shadow-2xl border-4 border-amber-400 relative text-center">
+            <button
+              onClick={() => setShowCertificate(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-amber-400 text-amber-600">
+              <Award className="w-9 h-9" />
+            </div>
+
+            <h2 className="text-xl font-bold text-slate-800 tracking-tight">វិញ្ញាបនបត្របញ្ជាក់ការប្រឡង</h2>
+            <p className="text-xs font-semibold text-amber-600 uppercase tracking-widest mt-1">វិទ្យាល័យអង្គរកា · ២០២៥-២០២៦</p>
+
+            <div className="my-6 py-5 px-4 bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl">
+              <p className="text-xs text-slate-500 mb-1">សូមបញ្ជាក់ថា សិស្សឈ្មោះ៖</p>
+              <h3 className="text-2xl font-extrabold text-blue-700">{studentInfo?.name || 'សិស្សានុសិស្ស'}</h3>
+              <div className="flex justify-center gap-4 mt-3 text-xs font-bold text-slate-600">
+                <span className="bg-white px-3 py-1 rounded-full border border-slate-200">លេខរៀង៖ #{studentInfo?.studentCode || 'N/A'}</span>
+                <span className="bg-white px-3 py-1 rounded-full border border-slate-200">ថ្នាក់៖ {studentInfo?.className || 'N/A'}</span>
+              </div>
+              <p className="text-xs text-emerald-600 font-bold mt-4">
+                ✓ បានបញ្ចប់ការប្រឡងមុខវិជ្ជា ព័ត៌មានវិទ្យា ជាស្ថាពរ
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => window.print()}
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-xs shadow-md transition-all cursor-pointer"
+              >
+                <Printer className="w-4 h-4" />
+                បោះពុម្ព / រក្សាទុក PDF
+              </button>
+              <button
+                onClick={() => setShowCertificate(false)}
+                className="px-6 py-3 rounded-xl border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+              >
+                បិទ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Card ── */}
       <div
         className="relative w-full max-w-xl z-10"
@@ -63,8 +113,6 @@ export default function Success() {
           transition: 'opacity 0.7s ease, transform 0.7s cubic-bezier(0.16,1,0.3,1)',
         }}
       >
-      
-
         {/* White Card Body */}
         <div className="bg-white/30 backdrop-blur-lg border border-pink-200/30 rounded-2xl shadow-xl p-6 max-w-lg w-full mx-auto animate-fadeInUp">
 
@@ -112,12 +160,20 @@ export default function Success() {
             ))}
           </div>
 
-          {/* Action Button */}
-          <div className="px-6 pb-7">
+          {/* Action Buttons */}
+          <div className="px-6 pb-7 space-y-3">
+            <button
+              onClick={() => setShowCertificate(true)}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:brightness-110 text-white font-bold py-3.5 rounded-xl text-sm shadow-md shadow-amber-500/20 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer"
+            >
+              <Award className="w-4 h-4" />
+              មើល ឬបោះពុម្ពប័ណ្ណបញ្ជាក់ការប្រឡង
+            </button>
+
             <button
               onClick={handleReturnHome}
               aria-label="Back to Home"
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 via-pink-600 to-pink-700 hover:brightness-110 text-white font-semibold py-3.5 rounded-xl text-sm shadow-md shadow-pink-500/20 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 active:brightness-95"
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 via-pink-600 to-pink-700 hover:brightness-110 text-white font-semibold py-3.5 rounded-xl text-sm shadow-md shadow-pink-500/20 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 active:brightness-95 cursor-pointer"
             >
               <Home className="w-4 h-4" />
               ត្រឡប់ទៅទំព័រដើម
@@ -139,3 +195,4 @@ export default function Success() {
     </div>
   );
 }
+

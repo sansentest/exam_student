@@ -68,22 +68,40 @@ export default function MatchingQuestion({ question, selectedOption, onSelect })
         newLines.push({ id: `${leftText}-${rightText}`, startX, startY, endX, endY, color: strokeColor });
       }
     });
-    setLines(newLines);
+
+    setLines((prev) => {
+      if (
+        prev.length === newLines.length &&
+        prev.every((item, i) =>
+          item.id === newLines[i].id &&
+          Math.abs(item.startX - newLines[i].startX) < 1 &&
+          Math.abs(item.startY - newLines[i].startY) < 1 &&
+          Math.abs(item.endX - newLines[i].endX) < 1 &&
+          Math.abs(item.endY - newLines[i].endY) < 1
+        )
+      ) {
+        return prev;
+      }
+      return newLines;
+    });
   }, [matches, shuffledRight]);
 
   // Update lines when matches change, options shuffle, or window resizes
   useEffect(() => {
-    // We use a small timeout to let the DOM paint the updated border/colors before getting rects.
-    // Also, when animating scale, the rect might shift slightly, but this is acceptable.
-    const timeout = setTimeout(updateLines, 50);
+    const timeout1 = setTimeout(updateLines, 50);
+    const timeout2 = setTimeout(updateLines, 200);
+    const timeout3 = setTimeout(updateLines, 500);
     window.addEventListener('resize', updateLines);
-    // Observe DOM changes (like layout shifts)
+    window.addEventListener('scroll', updateLines, { passive: true });
     const observer = new ResizeObserver(() => updateLines());
     if (containerRef.current) observer.observe(containerRef.current);
 
     return () => {
-      clearTimeout(timeout);
+      clearTimeout(timeout1);
+      clearTimeout(timeout2);
+      clearTimeout(timeout3);
       window.removeEventListener('resize', updateLines);
+      window.removeEventListener('scroll', updateLines);
       observer.disconnect();
     };
   }, [updateLines]);
@@ -104,32 +122,39 @@ export default function MatchingQuestion({ question, selectedOption, onSelect })
   };
 
   const handleLeftClick = (leftText) => {
+    if (selectedLeft === leftText) {
+      setSelectedLeft(null);
+      return;
+    }
     if (selectedRight) {
-      // Right was selected first → now completing the match
       createMatch(leftText, selectedRight);
     } else {
-      // Toggle left selection
-      setSelectedLeft(prev => prev === leftText ? null : leftText);
+      setSelectedLeft(leftText);
     }
   };
 
   const handleRightClick = (rightText) => {
+    if (selectedRight === rightText) {
+      setSelectedRight(null);
+      return;
+    }
     if (selectedLeft) {
-      // Left was selected first → completing the match
       createMatch(selectedLeft, rightText);
     } else {
-      // Toggle right selection
-      setSelectedRight(prev => prev === rightText ? null : rightText);
+      setSelectedRight(rightText);
     }
   };
 
   const handleUnmatch = (e, leftText) => {
-    e.stopPropagation();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     const newMatches = { ...matches };
     delete newMatches[leftText];
     onSelect(Object.keys(newMatches).length > 0 ? newMatches : null);
-    if (selectedLeft === leftText) setSelectedLeft(null);
-    if (selectedRight && matches[leftText] === selectedRight) setSelectedRight(null);
+    setSelectedLeft(null);
+    setSelectedRight(null);
   };
 
   const getColorObject = (leftText) => {
@@ -144,124 +169,137 @@ export default function MatchingQuestion({ question, selectedOption, onSelect })
     return getColorObject(leftText);
   };
 
+  const answeredCount = Object.keys(matches).length;
+  const totalCount = question.pairs.length;
+
   return (
-    <div className="w-full mt-4 select-none relative" ref={containerRef}>
+    <div className="w-full space-y-4 md:space-y-6 select-none">
       
-      {/* SVG Canvas for Lines */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" style={{ minHeight: '100%' }}>
-        {lines.map((line) => {
-          // Calculate Bezier curve control points
-          // To make a smooth S-curve connecting them horizontally:
-          const controlPointOffsetX = Math.abs(line.endX - line.startX) * 0.5;
-          const cp1x = line.startX + controlPointOffsetX;
-          const cp1y = line.startY;
-          const cp2x = line.endX - controlPointOffsetX;
-          const cp2y = line.endY;
+      {/* Helper instruction banner */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-xl p-3 md:p-3.5 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <div className="bg-blue-500 text-white p-1.5 rounded-lg shadow-sm">
+            <Link2 className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-xs md:text-sm font-bold text-blue-900">
+              ចុចជ្រើសរើសចម្លើយខាងឆ្វេង ហើយចុចផ្គូផ្គងជាមួយចម្លើយខាងស្តាំ
+            </p>
+            <p className="text-[11px] text-blue-600 hidden sm:block">
+              អ្នកអាចចុចលើសញ្ញាខ្វែង ✖ ដើម្បីលុបការផ្គូផ្គងវិញបាន
+            </p>
+          </div>
+        </div>
+        <div className="bg-white px-3 py-1 rounded-lg border border-blue-200 shadow-sm text-xs font-bold text-blue-700 flex-shrink-0">
+          {answeredCount} / {totalCount} គូ
+        </div>
+      </div>
 
-          // If stacked vertically (mobile), the curve might look a bit weird, 
-          // we adjust control points to make a generic nice curve.
-          const isStacked = line.startX > line.endX - 50; 
-          
-          const pathD = isStacked
-            ? `M ${line.startX} ${line.startY} C ${line.startX} ${line.startY + 50}, ${line.endX} ${line.endY - 50}, ${line.endX} ${line.endY}`
-            : `M ${line.startX} ${line.startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${line.endX} ${line.endY}`;
-
-          return (
-            <g key={line.id}>
-              {/* Outer stroke for depth */}
-              <path
-                d={pathD}
-                fill="none"
-                stroke="white"
-                strokeWidth="8"
-                strokeLinecap="round"
-                className="opacity-60"
-              />
-              {/* Inner colored stroke */}
-              <path
-                d={pathD}
-                fill="none"
-                stroke={line.color}
-                strokeWidth="4"
-                strokeLinecap="round"
-                className="animate-in fade-in duration-500 shadow-sm"
-                strokeDasharray="1000"
-                strokeDashoffset="0"
-                style={{ animation: 'dash 0.5s ease-out forwards' }}
-              />
-              <circle cx={line.startX} cy={line.startY} r="5" fill={line.color} stroke="white" strokeWidth="2" />
-              <circle cx={line.endX} cy={line.endY} r="5" fill={line.color} stroke="white" strokeWidth="2" />
-            </g>
-          );
-        })}
-        <style>{`
-          @keyframes dash {
-            from { stroke-dashoffset: 1000; }
-            to { stroke-dashoffset: 0; }
-          }
-        `}</style>
-      </svg>
-
-      <div className="grid grid-cols-2 gap-8 sm:gap-12 md:gap-24 relative z-10">
+      <div className="relative w-full min-h-[220px] sm:min-h-[260px]" ref={containerRef}>
         
-        {/* Left Column */}
-        <div className="space-y-3">
-          <h4 className="text-base font-bold text-slate-700 mb-3 text-center pb-2 border-b-2 border-slate-100">គ្រឿងបន្លាស់</h4>
-          {question.pairs.map((pair) => {
-            const colorObj = getColorObject(pair.left);
-            const isMatched = !!colorObj;
-            const isSelectedL = selectedLeft === pair.left;
-            const isWaiting = !!selectedRight && !isSelectedL;
-            // Rematch: already matched but selected again to swap
-            const isRematch = isMatched && isSelectedL;
+        {/* SVG Canvas for Lines */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" style={{ minHeight: '100%' }}>
+          {lines.map((line) => {
+            const controlPointOffsetX = Math.max(20, Math.abs(line.endX - line.startX) * 0.4);
+            const cp1x = line.startX + controlPointOffsetX;
+            const cp1y = line.startY;
+            const cp2x = line.endX - controlPointOffsetX;
+            const cp2y = line.endY;
+
+            const pathD = `M ${line.startX} ${line.startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${line.endX} ${line.endY}`;
 
             return (
-              <div key={pair.left} className="relative group">
-                <button
-                  ref={(el) => (leftRefs.current[pair.left] = el)}
-                  onClick={() => handleLeftClick(pair.left)}
-                  className={`w-full flex items-center justify-between px-1.5 py-1.5 sm:px-3 sm:py-3 md:px-4 md:py-3 rounded-xl transition-all duration-300 border-2 text-left shadow-sm min-h-[44px] md:min-h-[64px] ${
-                    isRematch
-                      ? `${colorObj.bg} ${colorObj.border} ring-2 ring-offset-1 ring-blue-400 scale-[1.02] shadow-md`
-                      : isMatched
-                        ? `${colorObj.bg} ${colorObj.border} shadow-md`
-                        : isSelectedL
-                          ? 'border-blue-400 bg-blue-50 shadow-blue-500/20 scale-[1.02] ring-2 ring-blue-400/20'
-                          : isWaiting
-                            ? 'border-purple-300 bg-purple-50/60 hover:border-purple-400 hover:bg-purple-100 cursor-pointer hover:shadow-md'
-                            : 'border-slate-200 bg-white hover:border-blue-300 hover:shadow-md hover:bg-slate-50'
-                  }`}
-                >
-                  <span className={`font-semibold text-[10px] sm:text-sm md:text-base leading-tight ${
-                    isMatched ? colorObj.text : isSelectedL ? 'text-blue-700' : isWaiting ? 'text-purple-700' : 'text-slate-700'
-                  }`}>
-                    {pair.left}
-                  </span>
-
-                  {isMatched && !isRematch && (
-                    <div
-                      onClick={(e) => handleUnmatch(e, pair.left)}
-                      className="w-5 h-5 md:w-7 md:h-7 rounded-full bg-white/80 hover:bg-red-100 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors shadow-sm"
-                    >
-                      <Unlink size={12} className="md:w-3.5 md:h-3.5" />
-                    </div>
-                  )}
-                  {isRematch && (
-                    <div className="w-3 h-3 rounded-full bg-blue-500 animate-ping" />
-                  )}
-                  {!isMatched && isSelectedL && (
-                    <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse" />
-                  )}
-                  {!isMatched && isWaiting && !isSelectedL && (
-                    <div className="w-3 h-3 rounded-full bg-purple-400 animate-pulse" />
-                  )}
-                </button>
-              </div>
+              <g key={line.id}>
+                <path
+                  d={pathD}
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                  className="opacity-75"
+                />
+                <path
+                  d={pathD}
+                  fill="none"
+                  stroke={line.color}
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                />
+                <circle cx={line.startX} cy={line.startY} r="4" fill={line.color} stroke="white" strokeWidth="2" />
+                <circle cx={line.endX} cy={line.endY} r="4" fill={line.color} stroke="white" strokeWidth="2" />
+              </g>
             );
           })}
-        </div>
+        </svg>
 
-        {/* Right Column */}
+        <div className="grid grid-cols-2 gap-8 sm:gap-12 md:gap-24 relative z-10">
+          
+          {/* Left Column */}
+          <div className="space-y-3">
+            <h4 className="text-base font-bold text-slate-700 mb-3 text-center pb-2 border-b-2 border-slate-100">គ្រឿងបន្លាស់</h4>
+            {question.pairs.map((pair) => {
+              const colorObj = getColorObject(pair.left);
+              const isMatched = !!colorObj;
+              const isSelectedL = selectedLeft === pair.left;
+              const isWaiting = !!selectedRight && !isSelectedL;
+              const isRematch = isMatched && isSelectedL;
+
+              return (
+                <div key={pair.left} className="relative group">
+                  <button
+                    type="button"
+                    ref={(el) => (leftRefs.current[pair.left] = el)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleLeftClick(pair.left);
+                    }}
+                    className={`w-full flex items-center justify-between px-2 py-2.5 sm:px-3 sm:py-3 md:px-4 md:py-3 rounded-xl transition-colors duration-150 border-2 text-left shadow-sm min-h-[50px] md:min-h-[64px] touch-manipulation cursor-pointer ${
+                      isRematch
+                        ? `${colorObj.bg} ${colorObj.border} ring-2 ring-offset-1 ring-blue-400`
+                        : isMatched
+                          ? `${colorObj.bg} ${colorObj.border}`
+                          : isSelectedL
+                            ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-400/20'
+                            : isWaiting
+                              ? 'border-purple-300 bg-purple-50/60 hover:border-purple-400 hover:bg-purple-100'
+                              : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className={`font-semibold text-xs sm:text-sm md:text-base leading-tight pointer-events-none ${
+                      isMatched ? colorObj.text : isSelectedL ? 'text-blue-700' : isWaiting ? 'text-purple-700' : 'text-slate-700'
+                    }`}>
+                      {pair.left}
+                    </span>
+
+                    {isMatched && !isRematch && (
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleUnmatch(e, pair.left);
+                        }}
+                        className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-white/90 hover:bg-red-100 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors shadow-sm cursor-pointer z-20"
+                      >
+                        <Unlink size={14} className="md:w-3.5 md:h-3.5 pointer-events-none" />
+                      </div>
+                    )}
+                    {isRematch && (
+                      <div className="w-3 h-3 rounded-full bg-blue-500 animate-ping pointer-events-none" />
+                    )}
+                    {!isMatched && isSelectedL && (
+                      <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse pointer-events-none" />
+                    )}
+                    {!isMatched && isWaiting && !isSelectedL && (
+                      <div className="w-3 h-3 rounded-full bg-purple-400 animate-pulse pointer-events-none" />
+                    )}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Right Column */}
         <div className="space-y-3">
           <h4 className="text-base font-bold text-slate-700 mb-3 text-center pb-2 border-b-2 border-slate-100">តួនាទី / អត្ថន័យ</h4>
           {shuffledRight.map((rightText, index) => {
@@ -269,29 +307,32 @@ export default function MatchingQuestion({ question, selectedOption, onSelect })
             const isMatched = !!colorObj;
             const isSelectedR = selectedRight === rightText;
             const isRematch = isMatched && isSelectedR;
-            // When left is selected, ALL right items are clickable targets (even matched)
             const isTarget = !!selectedLeft && !isSelectedR;
 
             return (
               <div key={index} className="relative">
                 <button
+                  type="button"
                   ref={(el) => (rightRefs.current[rightText] = el)}
-                  onClick={() => handleRightClick(rightText)}
-                  className={`w-full flex items-center justify-between px-1.5 py-1.5 sm:px-3 sm:py-3 md:px-4 md:py-3 rounded-xl transition-all duration-300 border-2 text-left shadow-sm min-h-[44px] md:min-h-[64px] ${
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleRightClick(rightText);
+                  }}
+                  className={`w-full flex items-center justify-between px-2 py-2.5 sm:px-3 sm:py-3 md:px-4 md:py-3 rounded-xl transition-colors duration-150 border-2 text-left shadow-sm min-h-[50px] md:min-h-[64px] touch-manipulation cursor-pointer ${
                     isRematch
-                      ? `${colorObj.bg} ${colorObj.border} ring-2 ring-offset-1 ring-purple-400 scale-[1.02] shadow-md`
+                      ? `${colorObj.bg} ${colorObj.border} ring-2 ring-offset-1 ring-purple-400`
                       : isMatched && isTarget
-                        ? `${colorObj.bg} ${colorObj.border} opacity-70 hover:opacity-100 hover:ring-2 hover:ring-blue-300 cursor-pointer`
+                        ? `${colorObj.bg} ${colorObj.border} opacity-70 hover:opacity-100 hover:ring-2 hover:ring-blue-300`
                       : isMatched
-                        ? `${colorObj.bg} ${colorObj.border} shadow-md`
+                        ? `${colorObj.bg} ${colorObj.border}`
                         : isSelectedR
-                          ? 'border-purple-400 bg-purple-50 shadow-purple-500/20 scale-[1.02] ring-2 ring-purple-400/20'
+                          ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-400/20'
                           : isTarget
-                            ? 'border-blue-200 bg-blue-50/50 hover:border-blue-400 hover:bg-blue-100 cursor-pointer hover:shadow-md'
-                            : 'border-slate-200 bg-white hover:border-purple-300 hover:shadow-md hover:bg-slate-50 cursor-pointer'
+                            ? 'border-blue-200 bg-blue-50/50 hover:border-blue-400 hover:bg-blue-100'
+                            : 'border-slate-200 bg-white hover:border-purple-300 hover:bg-slate-50'
                   }`}
                 >
-                  <span className={`font-medium text-[10px] sm:text-sm md:text-base leading-tight pr-1 ${
+                  <span className={`font-medium text-xs sm:text-sm md:text-base leading-tight pr-1 pointer-events-none ${
                     isMatched ? colorObj.text : isSelectedR ? 'text-purple-700' : isTarget ? 'text-slate-800' : 'text-slate-700'
                   }`}>
                     {rightText}
@@ -299,27 +340,32 @@ export default function MatchingQuestion({ question, selectedOption, onSelect })
 
                   {isMatched && !isRematch && (
                     <div
+                      role="button"
+                      tabIndex={0}
                       onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         const matchedLeft = Object.keys(matches).find(l => matches[l] === rightText);
                         if (matchedLeft) handleUnmatch(e, matchedLeft);
                       }}
-                      className="w-5 h-5 md:w-7 md:h-7 rounded-full bg-white/80 hover:bg-red-100 flex items-center justify-center transition-colors shadow-sm cursor-pointer group/unmatch"
+                      className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-white/90 hover:bg-red-100 flex items-center justify-center transition-colors shadow-sm cursor-pointer z-20 group/unmatch"
                     >
-                      <Check size={12} className={`md:w-4 md:h-4 ${colorObj.text} group-hover/unmatch:text-red-500`} />
+                      <Check size={14} className={`md:w-4 md:h-4 ${colorObj.text} group-hover/unmatch:text-red-500 pointer-events-none`} />
                     </div>
                   )}
                   {isRematch && (
-                    <div className="w-3 h-3 rounded-full bg-purple-500 animate-ping" />
+                    <div className="w-3 h-3 rounded-full bg-purple-500 animate-ping pointer-events-none" />
                   )}
                   {!isMatched && isSelectedR && (
-                    <div className="w-3 h-3 rounded-full bg-purple-500 animate-pulse" />
+                    <div className="w-3 h-3 rounded-full bg-purple-500 animate-pulse pointer-events-none" />
                   )}
                 </button>
               </div>
             );
           })}
         </div>
-        
+      </div>
+
       </div>
     </div>
   );

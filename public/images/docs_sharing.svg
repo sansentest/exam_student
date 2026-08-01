@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 320" width="100%" height="100%" style="background:#f8fafc; font-family: 'Inter', -apple-system, sans-serif;">
+  <!-- Dialog Box -->
+  <rect x="40" y="30" width="420" height="260" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="2" shadow="0 4px 6px rgba(0,0,0,0.1)"/>
+  
+  <!-- Header -->
+  <text x="64" y="70" font-size="18" font-weight="700" fill="#1e293b">Share "Project Exam Document"</text>
+  <circle cx="430" cy="65" r="14" fill="#f1f5f9"/>
+  <text x="425" y="70" font-size="14" fill="#64748b">?</text>
+
+  <!-- People Section -->
+  <text x="64" y="110" font-size="13" font-weight="600" fill="#475569">People with access</text>
+  
+  <!-- User row 1 (Owner) -->
+  <circle cx="80" cy="140" r="16" fill="#3b82f6"/>
+  <text x="75" y="145" font-size="14" font-weight="bold" fill="#ffffff">S</text>
+  <text x="110" y="135" font-size="14" font-weight="600" fill="#1e293b">San Sen (you)</text>
+  <text x="110" y="152" font-size="12" fill="#64748b">sansen@example.com</text>
+  <text x="390" y="143" font-size="13" font-weight="500" fill="#64748b" text-anchor="end">Owner</text>
+
+  <!-- Divider -->
+  <line x1="64" y1="170" x2="436" y2="170" stroke="#f1f5f9" stroke-width="1"/>
+
+  <!-- General access -->
+  <text x="64" y="195" font-size="13" font-weight="600" fill="#475569">General access</text>
+  <circle cx="80" cy="225" r="16" fill="#10b981"/>
+  <!-- Globe icon representation -->
+  <text x="74" y="230" font-size="14" fill="#ffffff">🌐</text>
+  <text x="110" y="220" font-size="14" font-weight="600" fill="#1e293b">Anyone with the link</text>
+  <text x="110" y="237" font-size="12" fill="#64748b">Anyone on the internet with the link can view</text>
+  
+  <!-- Permission Dropdown Highlighted: Viewer -->
+  <rect x="330" y="208" width="105" height="34" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="350" y="230" font-size="13" font-weight="700" fill="#1d4ed8">Viewer</text>
+  <path d="M 415 223 L 420 228 L 425 223" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Footer Buttons -->
+  <rect x="64" y="255" width="130" height="36" rx="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="95" y="278" font-size="13" font-weight="600" fill="#334155">🔗 Copy link</text>
+
+  <rect x="360" y="255" width="76" height="36" rx="18" fill="#3b82f6"/>
+  <text x="382" y="278" font-size="13" font-weight="600" fill="#ffffff">Done</text>
+</svg>

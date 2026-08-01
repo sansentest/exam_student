@@ -22,19 +22,14 @@ export default function QuestionCard({ question, selectedOption, onSelect, quest
 
   return (
     <div className="relative w-full">
-      {/* Glow when answered */}
-      {isAnswered && (
-        <div className="absolute -inset-1 bg-gradient-to-r from-blue-400/15 via-indigo-400/15 to-purple-400/15 rounded-[2rem] blur-xl pointer-events-none" />
-      )}
-
-      <div className={`relative bg-white/95 backdrop-blur-2xl rounded-2xl border transition-all duration-500 overflow-hidden shadow-lg ${
-        isAnswered ? 'border-blue-200/70 shadow-blue-100' : 'border-slate-200/80 shadow-slate-100'
+      <div className={`relative bg-white rounded-2xl border transition-colors duration-150 overflow-hidden shadow-sm ${
+        isAnswered ? 'border-blue-400 shadow-blue-50' : 'border-slate-200 shadow-slate-100'
       }`}>
 
         {/* Top accent bar */}
-        <div className={`h-1 w-full transition-all duration-700 ${
+        <div className={`h-1 w-full transition-colors duration-150 ${
           isAnswered
-            ? 'bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500'
+            ? 'bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500'
             : 'bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200'
         }`} />
 
@@ -42,9 +37,9 @@ export default function QuestionCard({ question, selectedOption, onSelect, quest
         <div className="px-4 pt-4 pb-3 md:px-6 md:pt-5">
           <div className="flex items-center gap-2 mb-2">
             {/* Question number badge */}
-            <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center font-extrabold text-xs transition-all duration-500 ${
+            <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center font-extrabold text-xs transition-colors duration-150 ${
               isAnswered
-                ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/30'
+                ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-sm'
                 : 'bg-slate-100 text-slate-500'
             }`}>
               {(questionIndex ?? 0) + 1}
@@ -71,19 +66,20 @@ export default function QuestionCard({ question, selectedOption, onSelect, quest
         </div>
 
         {/* Divider */}
-        <div className="mx-4 md:mx-6 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+        <div className="mx-4 md:mx-6 h-px bg-slate-200" />
 
         {/* Body */}
         <div className="px-4 pb-4 pt-3 md:px-6 md:pb-5">
 
           {/* Question Image */}
           {question.image && (
-            <div className="mb-3 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+            <div className="mb-4 rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50 flex justify-center p-2">
               <img
                 src={question.image}
                 alt="Question reference"
-                className="w-full object-cover hover:scale-105 transition-transform duration-700"
-                style={{ maxHeight: '160px' }}
+                className="w-full h-full object-contain"
+                style={{ maxHeight: '250px' }}
+                loading="lazy"
               />
             </div>
           )}
@@ -104,10 +100,10 @@ export default function QuestionCard({ question, selectedOption, onSelect, quest
                   <button
                     key={index}
                     onClick={() => handleOptionClick(option)}
-                    className={`group relative rounded-xl overflow-hidden border-2 transition-all duration-300 focus:outline-none ${
+                    className={`group relative rounded-xl overflow-hidden border-2 transition-colors duration-150 touch-manipulation select-none focus:outline-none ${
                       isSelected
-                        ? 'border-blue-500 shadow-lg shadow-blue-500/20 scale-[1.02]'
-                        : 'border-transparent hover:border-blue-300 hover:shadow-md hover:scale-[1.01]'
+                        ? 'border-blue-500 shadow-md bg-blue-50/20'
+                        : 'border-slate-200 hover:border-blue-300'
                     }`}
                   >
                     {isSelected && (
@@ -117,8 +113,8 @@ export default function QuestionCard({ question, selectedOption, onSelect, quest
                         </div>
                       </div>
                     )}
-                    <div className="w-full h-28 sm:h-40 bg-slate-100">
-                      <img src={option} alt={`Option ${index + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <div className="w-full h-32 sm:h-44 bg-white flex items-center justify-center p-2">
+                      <img src={option} alt={`Option ${index + 1}`} className="max-w-full max-h-full object-contain" loading="lazy" />
                     </div>
                     <div className={`absolute top-2 left-2 z-20 w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shadow ${
                       isSelected ? 'bg-blue-500 text-white' : 'bg-white/90 text-slate-600'
@@ -142,16 +138,16 @@ export default function QuestionCard({ question, selectedOption, onSelect, quest
                   <button
                     key={index}
                     onClick={() => handleOptionClick(option)}
-                    className={`group w-full flex items-center gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-xl border-2 text-left transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                    className={`group w-full flex items-center gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-xl border-2 text-left transition-colors duration-150 touch-manipulation select-none focus:outline-none ${
                       isSelected
-                        ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md shadow-blue-500/10 scale-[1.01]'
-                        : 'border-slate-200 bg-slate-50/80 hover:bg-white hover:border-blue-300 hover:shadow-sm'
+                        ? 'border-blue-500 bg-blue-50/90 shadow-sm'
+                        : 'border-slate-200 bg-slate-50/80 hover:bg-white hover:border-blue-300'
                     }`}
                   >
                     {/* Label badge */}
-                    <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                    <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-colors duration-150 ${
                       isSelected
-                        ? 'bg-blue-500 text-white shadow-sm shadow-blue-500/30'
+                        ? 'bg-blue-500 text-white shadow-sm'
                         : 'bg-white text-slate-500 border border-slate-200 group-hover:border-blue-300 group-hover:text-blue-500'
                     }`}>
                       {isSelected
@@ -161,7 +157,7 @@ export default function QuestionCard({ question, selectedOption, onSelect, quest
 
                     {/* Option text */}
                     <span className={`flex-1 text-sm md:text-base leading-snug font-medium select-none transition-colors ${
-                      isSelected ? 'text-blue-900' : 'text-slate-700 group-hover:text-slate-900'
+                      isSelected ? 'text-blue-900 font-semibold' : 'text-slate-700'
                     }`}>
                       {option}
                     </span>

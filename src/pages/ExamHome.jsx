@@ -1,4 +1,5 @@
 import { BookOpen, Clock, Calendar, AlertTriangle, Award, GraduationCap, Shield } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import StudentForm from '../components/StudentForm';
 import ProgressBar from '../components/ProgressBar';
 
@@ -30,7 +31,7 @@ export default function ExamHome() {
               វិទ្យាល័យអង្គរកា
             </h1>
             <h2 className="text-sm text-blue-100 mb-4 drop-shadow">
-              ប្រឡងឆមាសលើកទី២ ឆ្នាំសិក្សា ២០២៣-២០២៤
+              ប្រឡងឆមាសលើកទី២ ឆ្នាំសិក្សា ២០២៥-២០២៦
             </h2>
 
             {/* Separator Line */}
@@ -57,7 +58,7 @@ export default function ExamHome() {
               <div>
                 <h3 className="text-sm font-bold text-red-100 mb-1">បម្រាម និងការព្រមាន!</h3>
                 <p className="text-sm text-red-100/90 leading-relaxed">
-                  បម្រាម៖ ហាមចាកចេញពីផ្ទាំងប្រឡង (Switch Tabs) ឬប្តូរកម្មវិធី។ នោះវានឹងចាប់ ២ នាទី ដោយស្វ័យប្រវត្តិ។
+                  បម្រាម៖ ហាមចាកចេញពីផ្ទាំងប្រឡង (Switch Tabs) ឬប្តូរកម្មវិធី។ នោះវានឹងចាប់ ១ នាទី ដោយស្វ័យប្រវត្តិ។
                 </p>
               </div>
             </div>
@@ -70,6 +71,10 @@ export default function ExamHome() {
       <div className="w-full max-w-3xl mb-12">
         <StudentForm />
       </div>
+
+  
+    
     </div>
   );
 }
+
