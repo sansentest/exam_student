@@ -1,4 +1,4 @@
-# 🎓 IT Student Examination System (Interactive Exam Portal & Admin Panel)
+# 🎓 IT Student Examination System (Interactive Exam Portal)
 
 ![React](https://img.shields.io/badge/React-19.2-blue?style=for-the-badge&logo=react)
 ![Vite](https://img.shields.io/badge/Vite-8.1-646CFF?style=for-the-badge&logo=vite)
@@ -17,7 +17,6 @@ A modern, highly responsive, and mobile-optimized web-based examination platform
 - 🤖 **Gemini AI Automated Grading:** Automatically grades student essay responses (Section 3) using Google Gemini AI integrated directly into the backend script.
 - 🛡️ **Anti-Cheat & Tab-Switch Monitoring:** Detects when a student switches browser tabs or leaves the exam window, tracking violation counts and displaying a time-penalty overlay.
 - 📊 **Serverless Google Sheets Backend:** Zero server costs! Submits exam data and scores concurrently to Google Sheets via Google Apps Script (`doPost`), handling multiple simultaneous student submissions smoothly.
-- 🔐 **Teacher Admin Panel (`/admin`):** Dedicated portal for instructors to review student scores, monitor anti-cheat statistics, inspect answers, and generate downloadable graduation certificates.
 - 💾 **State Persistence (Zustand):** Automatically backs up exam progress to `localStorage`, preventing data loss if a student accidentally refreshes the browser.
 
 ---
@@ -38,10 +37,10 @@ Open your terminal (Command Prompt, PowerShell, or macOS/Linux Terminal) and run
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY-NAME.git
+git clone https://github.com/sansentest/exam_student.git
 
 # Navigate into the project directory
-cd "Project exam"
+cd exam_student
 ```
 
 ### 2. Install Dependencies
@@ -281,17 +280,85 @@ By default, the exam requires a student class password to begin.
 
 ---
 
-## 👨‍🏫 Teacher Admin Panel (`/admin`)
+## ✏️ How to Add or Modify Exam Questions
 
-Instructors can access the administrative dashboard by navigating to `/admin` in the browser:
-- **Local Development:** `http://localhost:5173/admin`
-- **Production URL:** `https://yourdomain.com/admin`
+You can easily customize exam questions without touching the UI components by modifying the data files in `src/data/`.
 
-**Features available in the Admin Panel:**
-- View real-time student submissions, scores, and completion timestamps.
-- Check **Anti-Cheat statistics** (number of tab-switching violations per student).
-- Review individual student answers and essay grades.
-- Generate and download official **Student Certificates** for passing students.
+### 1. Multiple-Choice (MCQ) & Matching Questions
+Edit **`src/data/questions.js`** to add or modify Section 2 questions.
+
+**Example Multiple-Choice (MCQ) Format:**
+```javascript
+{
+  id: 1,
+  question: "តើ Hardware (ផ្នែករឹង) គឺជាអ្វី?",
+  points: 1,
+  options: [
+    "កម្មវិធីដែលដំណើរការលើកុំព្យូទ័រ",
+    "ផ្នែករបស់កុំព្យូទ័រដែលអាចប៉ះ និងមើលឃើញបាន",
+    "ឯកសារដែលរក្សាទុកក្នុងកុំព្យូទ័រ",
+    "ប្រព័ន្ធអ៊ីនធឺណិត"
+  ],
+  answer: "ផ្នែករបស់កុំព្យូទ័រដែលអាចប៉ះ និងមើលឃើញបាន"
+}
+```
+
+**Example SVG Matching Question Format:**
+```javascript
+{
+  id: 31,
+  type: "matching",
+  question: "សូមគូសផ្គងកម្មវិធី Google ទៅនឹងមុខងាររបស់វា៖",
+  points: 1,
+  pairs: [
+    { left: "Google Docs", right: "បង្កើតឯកសារ និងសរសេរអត្ថបទ" },
+    { left: "Google Slides", right: "បង្កើតបទបង្ហាញ" }
+  ],
+  answer: {
+    "Google Docs": "បង្កើតឯកសារ និងសរសេរអត្ថបទ",
+    "Google Slides": "បង្កើតបទបង្ហាញ"
+  }
+}
+```
+
+### 2. Essay Questions (Graded Automatically by Gemini AI)
+Edit **`src/data/questions3.js`** to add or modify Section 3 essay prompts.
+
+**Example Essay Question Format:**
+```javascript
+{
+  id: "s3_1",
+  question: "តើបច្ចេកវិទ្យាបញ្ញាសិប្បនិម្មិត (AI) មានគុណសម្បត្តិ និងគុណវិបត្តិអ្វីខ្លះនៅក្នុងការរស់នៅប្រចាំថ្ងៃ?",
+  placeholder: "សូមសរសេរចម្លើយពន្យល់នៅទីនេះ...",
+  minLength: 5
+}
+```
+
+---
+
+## 👥 How to Add Students & Class Passwords
+
+You can register student rosters and assign class passwords by editing **`src/data/students.js`**.
+
+### 1. Assign Class Passwords
+In `src/data/students.js`, update the `classPasswords` object with your class names and their respective passwords:
+```javascript
+export const classPasswords = {
+  '10A': '6677',
+  '10B': '7890',
+  '10C': '1972',
+};
+```
+
+### 2. Register Student List
+Add student objects to the `studentData` array. Each student should have their `className`, `studentCode`, `name`, and `gender`:
+```javascript
+export const studentData = [
+  { className: '10A', studentCode: '01', name: 'កន ច័ន្ទណារី', gender: 'Female' },
+  { className: '10A', studentCode: '02', name: 'កប ស្រីនាត', gender: 'Female' },
+  { className: '10A', studentCode: '03', name: 'កាន រិទ្ធិស័ក្ដិ', gender: 'Male' },
+];
+```
 
 ---
 
@@ -331,8 +398,7 @@ Project exam/
 │   ├── pages/
 │   │   ├── ExamHome.jsx           # Student registration & password verification
 │   │   ├── ExamSection2.jsx       # Section 2 exam interface (MCQ & Matching)
-│   │   ├── ExamSection3.jsx       # Section 3 exam interface (Essay questions)
-│   │   └── AdminDashboard.jsx     # Teacher admin panel (/admin)
+│   │   └── ExamSection3.jsx       # Section 3 exam interface (Essay questions)
 │   ├── services/
 │   │   └── api.js                 # Google Apps Script backend communication service
 │   ├── store/
