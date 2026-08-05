@@ -1,5 +1,5 @@
 // Replace this with your actual Google Apps Script Web App URL
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby1s5rqKwgHlsGv2EUED34V4BG8SUsK7GP7GxepFQ5q25ANx44YKEgCxqw_11Kbhn_o0w/exec';
+const GOOGLE_APPS_SCRIPT_URL = 'url google app script';
 
 import { questions } from '../data/questions';
 
